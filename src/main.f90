@@ -1,11 +1,16 @@
 program main
 
   use mod_error
+  use mod_xyz_t
+  use mod_read_xyz
 
   implicit none
 
   character(*), parameter :: my_name = "main"
   character(120) :: prog_name
+  character(120) :: fname
+  type(xyz_t) :: xyz_input
+  type(xyz_t) :: xyz_output
 
   call get_command_argument(0,prog_name)
 
@@ -14,7 +19,9 @@ program main
     stop 1
   end if
 
-!  call read_xyz()
+  call get_command_argument(1,fname)
+
+  call read_xyz(trim(fname),xyz_input)
 !  call cell_reshape()
 !  call cell_saturate()
 
