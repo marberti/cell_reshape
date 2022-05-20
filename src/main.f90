@@ -3,6 +3,7 @@ program main
   use mod_error
   use mod_xyz_t
   use mod_read_xyz
+  use mod_write_xyz
 
   implicit none
 
@@ -22,6 +23,8 @@ program main
   call get_command_argument(1,fname)
 
   call read_xyz(trim(fname),xyz_input)
+  write(*,*) "Input:"
+  call write_xyz(xyz_input)
 !  call cell_reshape()
 !  call cell_saturate()
 
