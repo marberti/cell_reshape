@@ -7,6 +7,7 @@ MODDIR = mod
 
 SOURCES = mod_parameters.f90      \
           mod_error.f90           \
+          mod_get_field.f90       \
           mod_xyz_t.f90           \
           mod_read_xyz.f90        \
           mod_cell_reshape.f90    \

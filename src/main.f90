@@ -10,7 +10,7 @@ program main
   character(120) :: prog_name
   character(120) :: fname
   type(xyz_t) :: xyz_input
-  type(xyz_t) :: xyz_output
+!  type(xyz_t) :: xyz_output
 
   call get_command_argument(0,prog_name)
 
