@@ -31,6 +31,8 @@ program main
   write(*,*) "Cell center:"
   write(*,*) cell_center%x, cell_center%y, cell_center%z
   call cell_reshape(xyz_input,xyz_output,cell_center)
+  write(*,*) "Reshaped."
+  call write_xyz(xyz_output,"reshaped.xyz")
 !  call cell_saturate()
 
 contains

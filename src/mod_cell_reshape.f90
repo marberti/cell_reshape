@@ -20,12 +20,6 @@ subroutine cell_reshape(cin,cout,center)
   type(p3d_t), intent(in)  :: center
   character(*), parameter :: my_name = "cell_reshape"
   integer :: n
-  real(dbl) :: x_min
-  real(dbl) :: x_max
-  real(dbl) :: y_min
-  real(dbl) :: y_max
-  real(dbl) :: z_min
-  real(dbl) :: z_max
   integer :: err_n
   character(120) :: err_msg
 
@@ -40,17 +34,46 @@ subroutine cell_reshape(cin,cout,center)
   allocate(cout%z(n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
-  x_min = minval(cin%x)
-  x_max = maxval(cin%x)
-  y_min = minval(cin%y)
-  y_max = maxval(cin%y)
-  z_min = minval(cin%z)
-  z_max = maxval(cin%z)
+  cout%e = cin%e
+  cout%x = cin%x
+  cout%y = cin%y
+  cout%z = cin%z
 
-  write(*,*) x_min, x_max
-  write(*,*) y_min, y_max
-  write(*,*) z_min, z_max
+  call reshape_array(cout%x,n,center%x)
+  call reshape_array(cout%y,n,center%y)
+  call reshape_array(cout%z,n,center%z)
 
 end subroutine cell_reshape
+
+subroutine reshape_array(a,n,c)
+
+  real(dbl), dimension(:), intent(inout) :: a
+  integer, intent(in) :: n
+  real(dbl), intent(in) :: c
+  integer :: i
+  real(dbl) :: a_min
+  real(dbl) :: a_max
+  real(dbl) :: d
+  real(dbl) :: t ! threshold
+  real(dbl) :: f ! fuzziness
+
+  f = 0.0_dbl
+
+  a_min = minval(a)
+  a_max = maxval(a)
+  d = a_max - a_min
+  t = d / 2.0_dbl
+
+  do i=1, n
+    if (abs(c-a(i)) + f > t) then
+      if (a(i) > c) then
+        a(i) = a(i) - d
+      else
+        a(i) = a(i) + d
+      end if
+    end if
+  end do
+
+end subroutine reshape_array
 
 end module mod_cell_reshape
