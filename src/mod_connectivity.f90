@@ -32,8 +32,9 @@ subroutine get_connectivity_matrix(e,x,y,z,dm,lm)
   integer :: err_n
   character(120) :: err_msg
 
-  n = size(x)
-  
+  n = size(e)
+
+  if (size(x) /= n) call error(my_name,"mismatching input vectors sizes")
   if (size(y) /= n) call error(my_name,"mismatching input vectors sizes")
   if (size(z) /= n) call error(my_name,"mismatching input vectors sizes")
 
