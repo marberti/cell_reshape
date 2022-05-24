@@ -1,25 +1,25 @@
-module mod_read_xyz
+module mod_read_cell
 
   use mod_parameters
   use mod_error
   use mod_p3d_t
-  use mod_xyz_t
+  use mod_cell_t
   use mod_get_field
 
   implicit none
   save
   private
 
-  public :: read_xyz
+  public :: read_cell
 
 contains
 
-subroutine read_xyz(fname,xyz,center)
+subroutine read_cell(fname,cell,center)
 
   character(*), intent(in) :: fname
-  type(xyz_t), intent(out) :: xyz
+  type(cell_t), intent(out) :: cell
   type(p3d_t), intent(out) :: center
-  character(*), parameter :: my_name = "read_xyz"
+  character(*), parameter :: my_name = "read_cell"
   integer, parameter :: fnumb = 200
   character(200) :: buff
   character(100) :: field
@@ -38,17 +38,17 @@ subroutine read_xyz(fname,xyz,center)
 
   read(fnumb,*,iostat=err_n,iomsg=err_msg) n
   if (err_n /= 0) call error(my_name,err_msg)
-  read(fnumb,*,iostat=err_n,iomsg=err_msg)
+  read(fnumb,*,iostat=err_n,iomsg=err_msg) cell%a, cell%b, cell%c
   if (err_n /= 0) call error(my_name,err_msg)
 
-  xyz%n = n
-  allocate(xyz%e(n),stat=err_n,errmsg=err_msg)
+  cell%xyz%n = n
+  allocate(cell%xyz%e(n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
-  allocate(xyz%x(n),stat=err_n,errmsg=err_msg)
+  allocate(cell%xyz%x(n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
-  allocate(xyz%y(n),stat=err_n,errmsg=err_msg)
+  allocate(cell%xyz%y(n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
-  allocate(xyz%z(n),stat=err_n,errmsg=err_msg)
+  allocate(cell%xyz%z(n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
   do i=1, n
@@ -56,24 +56,24 @@ subroutine read_xyz(fname,xyz,center)
     if (err_n /= 0) call error(my_name,err_msg)
     call get_field(buff,field,1,err_n,err_msg)
     if (err_n /= 0) call error(my_name,err_msg)
-    read(field,"(A2)") xyz%e(i)
+    read(field,"(A2)") cell%xyz%e(i)
     call get_field(buff,field,2,err_n,err_msg)
     if (err_n /= 0) call error(my_name,err_msg)
-    read(field,*) xyz%x(i)
+    read(field,*) cell%xyz%x(i)
     call get_field(buff,field,3,err_n,err_msg)
     if (err_n /= 0) call error(my_name,err_msg)
-    read(field,*) xyz%y(i)
+    read(field,*) cell%xyz%y(i)
     call get_field(buff,field,4,err_n,err_msg)
     if (err_n /= 0) call error(my_name,err_msg)
-    read(field,*) xyz%z(i)
+    read(field,*) cell%xyz%z(i)
     call get_field(buff,field,5,err_n,err_msg)
     if (err_n == 0) then
       if (trim(field) == "*") then
         if (flag_found_center) call error(my_name,&
           "specified more than one center in the input geometry")
-        center%x = xyz%x(i)
-        center%y = xyz%y(i)
-        center%z = xyz%z(i)
+        center%x = cell%xyz%x(i)
+        center%y = cell%xyz%y(i)
+        center%z = cell%xyz%z(i)
         flag_found_center = .true.
       else
         write(i_str,"(I8)") i+2
@@ -89,6 +89,6 @@ subroutine read_xyz(fname,xyz,center)
   if (flag_found_center.eqv..false.) call error(my_name,&
     "no center was specified in the input geometry")
 
-end subroutine read_xyz
+end subroutine read_cell
 
-end module mod_read_xyz
+end module mod_read_cell

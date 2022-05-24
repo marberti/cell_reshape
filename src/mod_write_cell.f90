@@ -1,23 +1,23 @@
-module mod_write_xyz
+module mod_write_cell
 
   use mod_error
-  use mod_xyz_t
+  use mod_cell_t
 
   implicit none
   save
   private
 
-  public :: write_xyz
+  public :: write_cell
 
 contains
 
-subroutine write_xyz(xyz,fname)
+subroutine write_cell(cell,fname)
 
   use, intrinsic :: iso_fortran_env
 
-  type(xyz_t), intent(in) :: xyz
+  type(cell_t), intent(in) :: cell
   character(*), optional, intent(in) :: fname
-  character(*), parameter :: my_name = "write_xyz"
+  character(*), parameter :: my_name = "write_cell"
   character(*), parameter :: fmt0 = "(1X,A2,3(1X,F11.6))"
   integer, parameter :: fnumb_par = 405
   integer :: fnumb
@@ -34,10 +34,10 @@ subroutine write_xyz(xyz,fname)
     fnumb = OUTPUT_UNIT
   end if
 
-  write(fnumb,*) xyz%n
+  write(fnumb,*) cell%xyz%n
   write(fnumb,*)
-  do i=1, xyz%n
-    write(fnumb,fmt0) xyz%e(i), xyz%x(i), xyz%y(i), xyz%z(i)
+  do i=1, cell%xyz%n
+    write(fnumb,fmt0) cell%xyz%e(i),cell%xyz%x(i),cell%xyz%y(i),cell%xyz%z(i)
   end do
 
   if (present(fname)) then
@@ -45,6 +45,6 @@ subroutine write_xyz(xyz,fname)
     if (err_n /= 0) call error(my_name,err_msg)
   end if
 
-end subroutine write_xyz
+end subroutine write_cell
 
-end module mod_write_xyz
+end module mod_write_cell

@@ -11,8 +11,8 @@ SOURCES = mod_parameters.f90      \
           mod_cell_t.f90          \
           mod_error.f90           \
           mod_get_field.f90       \
-          mod_read_xyz.f90        \
-          mod_write_xyz.f90       \
+          mod_read_cell.f90       \
+          mod_write_cell.f90      \
           mod_cell_reshape.f90    \
           main.f90
 
