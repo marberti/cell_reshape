@@ -2,7 +2,6 @@ module mod_cell_saturate
 
   use mod_parameters
   use mod_error
-  use mod_xyz_t
   use mod_cell_t
 
   implicit none
@@ -13,11 +12,16 @@ module mod_cell_saturate
 
 contains
 
-subroutine cell_saturate(cin,gout)
+subroutine cell_saturate(cin,cout)
 
-  type(cell_t), intent(in) :: cin
-  type(xyz_t), intent(out) :: gout
+  type(cell_t), intent(in)  :: cin
+  type(cell_t), intent(out) :: cout
   character(*), parameter :: my_name = "cell_saturate"
+
+  ! Output is not a periodic cell, cell constants are meaningless
+  cout%a = 0.0
+  cout%b = 0.0
+  cout%c = 0.0
 
 end subroutine cell_saturate
 
