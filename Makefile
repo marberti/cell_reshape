@@ -14,6 +14,7 @@ SOURCES = mod_parameters.f90      \
           mod_read_cell.f90       \
           mod_write_cell.f90      \
           mod_cell_reshape.f90    \
+          mod_cell_saturate.f90   \
           main.f90
 
 SRC = $(addprefix $(SRCDIR)/, $(SOURCES))
