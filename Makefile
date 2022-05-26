@@ -10,8 +10,10 @@ SOURCES = mod_parameters.f90              \
           mod_xyz_t.f90                   \
           mod_cell_t.f90                  \
           mod_error.f90                   \
+          mod_periodic_table.f90          \
           mod_euclidean_distance.f90      \
           mod_get_field.f90               \
+          mod_van_der_waals.f90           \
           mod_connectivity.f90            \
           mod_read_cell.f90               \
           mod_write_cell.f90              \
