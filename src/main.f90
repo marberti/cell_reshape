@@ -62,7 +62,11 @@ program main
     call write_cell(cresh,"reshaped.xyz")
   end if
   if (flag_cell_saturate) then
-    call cell_saturate(cresh,csat)
+    if (flag_cell_reshape) then
+      call cell_saturate(cresh,csat)
+    else
+      call cell_saturate(cin,csat)
+    end if
     write(*,*) "Saturated."
     call write_cell(csat,"saturated.xyz")
   end if
