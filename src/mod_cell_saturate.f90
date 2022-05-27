@@ -3,6 +3,7 @@ module mod_cell_saturate
   use mod_parameters
   use mod_error
   use mod_cell_t
+  use mod_logical
   use mod_connectivity
 
   implicit none
@@ -20,6 +21,8 @@ subroutine cell_saturate(cin,cout)
   character(*), parameter :: my_name = "cell_saturate"
   real(dbl), dimension(:,:), allocatable :: dm
   logical, dimension(:,:), allocatable :: lm
+  integer, dimension(:), allocatable :: bonds
+  integer :: i
   integer :: n
   integer :: err_n
   character(120) :: err_msg
@@ -32,6 +35,9 @@ subroutine cell_saturate(cin,cout)
   allocate(lm(n,n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
+  allocate(bonds(n),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
   ! Output is not a periodic cell, cell constants are meaningless
   cout%a = 0.0
   cout%b = 0.0
@@ -39,10 +45,17 @@ subroutine cell_saturate(cin,cout)
 
   call get_connectivity_matrix(cin%xyz%e,cin%xyz%x,cin%xyz%y,cin%xyz%z,dm,lm)
 
+  do i = 1, n
+    bonds(i) = count_true(lm(:,i))
+  end do
+
   deallocate(dm,stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
   deallocate(lm,stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
+  deallocate(bonds,stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
 end subroutine cell_saturate
