@@ -9,6 +9,7 @@ module mod_periodic_table
 
   public :: periodic_table_len
   public :: periodic_table
+  public :: pt_get_r_mean
   public :: pt_get_r_max
 
   type :: element_t
@@ -145,6 +146,42 @@ module mod_periodic_table
   /)
 
 contains
+
+real(dbl) function pt_get_r_mean(e)
+
+  character(2), intent(in) :: e
+  character(*), parameter :: my_name = "pt_get_r_mean"
+  integer :: i
+  logical :: flag_found_e
+
+  ! TODO remove when r_mean and r_max will be implemented for all elements
+  select case (e)
+  case ("H")
+    continue
+  case ("O")
+    continue
+  case ("Al")
+    continue
+  case ("Si")
+    continue
+  case default
+    call error(my_name,"r_mean for element "//trim(e)//" not implemented yet")
+  end select
+  ! end
+
+  flag_found_e = .false.
+
+  do i = 1, periodic_table_len
+    if (e == periodic_table(i)%e) then
+      pt_get_r_mean = periodic_table(i)%r_mean
+      flag_found_e = .true.
+      exit
+    end if
+  end do
+
+  if (.not.flag_found_e) call error(my_name,"element "//trim(e)//" not found")
+
+end function pt_get_r_mean
 
 real(dbl) function pt_get_r_max(e)
 
