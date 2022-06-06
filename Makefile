@@ -11,6 +11,7 @@ SOURCES = mod_parameters.f90              \
           mod_cell_t.f90                  \
           mod_error.f90                   \
           mod_logical.f90                 \
+          mod_rotation.f90                \
           mod_periodic_table.f90          \
           mod_euclidean_distance.f90      \
           mod_get_field.f90               \
