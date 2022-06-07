@@ -7,6 +7,7 @@ module mod_rotation
   save
   private
 
+  public :: deg2rad
   public :: rot_matrix
   public :: rotate3d
 
@@ -14,10 +15,20 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+real(dbl) function deg2rad(a)
+
+  real(dbl), intent(in) :: a ! angle in degrees
+
+  deg2rad = a * pi / 180.0_dbl
+
+end function deg2rad
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 subroutine rot_matrix(axis,a,m)
 
   integer, intent(in) :: axis
-  real(dbl), intent(in) :: a ! angle
+  real(dbl), intent(in) :: a ! angle in radians
   real(dbl), dimension(3,3), intent(out) :: m
   character(*), parameter :: my_name = "rot_matrix"
 
@@ -65,7 +76,7 @@ subroutine rotate3d(p_in,p_out,axis,a)
   real(dbl), dimension(3), intent(in) :: p_in
   real(dbl), dimension(3), intent(out) :: p_out
   integer, intent(in) :: axis
-  real(dbl), intent(in) :: a ! angle
+  real(dbl), intent(in) :: a ! angle in radians
   character(*), parameter :: my_name = "rotate3d"
   real(dbl), dimension(3,3) :: m
 

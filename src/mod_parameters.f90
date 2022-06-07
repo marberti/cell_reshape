@@ -7,5 +7,6 @@ module mod_parameters
   public
 
   integer, parameter :: dbl = REAL64
+  real(dbl), parameter :: pi = 3.14159265358979323846_dbl
 
 end module mod_parameters
