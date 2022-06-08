@@ -68,8 +68,7 @@ subroutine atom_saturate(i,cin,lm)
   integer :: bonds_max
   real(dbl) :: dist
 
-  bonds_max = 4 ! FIXME
-  !bonds_max = pt_get_max_bonds(cin%xyz%e(i))
+  bonds_max = pt_get_max_bonds(cin%xyz%e(i))
   bonds_done = count_true(lm(:,i))
 
   if (bonds_done >= bonds_max) return

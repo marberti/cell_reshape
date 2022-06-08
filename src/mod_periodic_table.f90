@@ -11,6 +11,7 @@ module mod_periodic_table
   public :: periodic_table
   public :: pt_get_r_mean
   public :: pt_get_r_max
+  public :: pt_get_max_bonds
 
   type :: element_t
     character(2) :: e
@@ -147,6 +148,8 @@ module mod_periodic_table
 
 contains
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 real(dbl) function pt_get_r_mean(e)
 
   character(2), intent(in) :: e
@@ -183,6 +186,8 @@ real(dbl) function pt_get_r_mean(e)
 
 end function pt_get_r_mean
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 real(dbl) function pt_get_r_max(e)
 
   character(2), intent(in) :: e
@@ -218,5 +223,31 @@ real(dbl) function pt_get_r_max(e)
   if (.not.flag_found_e) call error(my_name,"element "//trim(e)//" not found")
 
 end function pt_get_r_max
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+integer function pt_get_max_bonds(e)
+
+  character(2), intent(in) :: e
+  character(*), parameter :: my_name = "pt_get_max_bonds"
+
+  ! TODO Implement max_bonds as a field of element_t
+  !      This function should retrieve the required info from periodic_table
+  select case (e)
+  case ("H")
+    pt_get_max_bonds = 1
+  case ("O")
+    pt_get_max_bonds = 2
+  case ("Al")
+    pt_get_max_bonds = 3
+  case ("Si")
+    pt_get_max_bonds = 4
+  case default
+    call error(my_name,"not implemented for element "//trim(e))
+  end select
+
+end function pt_get_max_bonds
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end module mod_periodic_table
