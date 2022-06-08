@@ -75,10 +75,6 @@ subroutine atom_saturate(i,cin,lm)
 
   dist = pt_get_r_mean("H ") + pt_get_r_mean(cin%xyz%e(i))
 
-  ! TODO remove
-  print *, cin%xyz%e(i), cin%xyz%x(i), cin%xyz%y(i), cin%xyz%z(i)
-  ! end
-
   select case (bonds_max)
   case (1)
     call error(my_name,"bonds_max == 1 not implemented yet")
@@ -87,7 +83,7 @@ subroutine atom_saturate(i,cin,lm)
   case (3)
     call error(my_name,"bonds_max == 3 not implemented yet")
   case (4)
-    call saturate_tetrahedral(bonds_done,dist)
+    call saturate_4_tetrahedral(bonds_done,dist)
   case default
     call error(my_name,"bonds_max > 4 not implemented yet")
   end select
@@ -98,7 +94,52 @@ end subroutine atom_saturate
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine saturate_tetrahedral(bonds_done,d)
+subroutine saturate_1()
+
+  character(*), parameter :: my_name = "saturate_1"
+  call error(my_name,"not implemented yet")
+
+end subroutine saturate_1
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine saturate_2_linear()
+
+  character(*), parameter :: my_name = "saturate_2_linear"
+  call error(my_name,"not implemented yet")
+
+end subroutine saturate_2_linear
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine saturate_2_angular()
+
+  character(*), parameter :: my_name = "saturate_2_angular"
+  call error(my_name,"not implemented yet")
+
+end subroutine saturate_2_angular
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine saturate_3_trigonal_planar()
+
+  character(*), parameter :: my_name = "saturate_3_trigonal_planar"
+  call error(my_name,"not implemented yet")
+
+end subroutine saturate_3_trigonal_planar
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine saturate_3_trigonal_pyramidal()
+
+  character(*), parameter :: my_name = "saturate_3_trigonal_pyramidal"
+  call error(my_name,"not implemented yet")
+
+end subroutine saturate_3_trigonal_pyramidal
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine saturate_4_tetrahedral(bonds_done,d)
 
   integer, intent(in) :: bonds_done
   real(dbl), intent(in) :: d
@@ -128,6 +169,8 @@ subroutine saturate_tetrahedral(bonds_done,d)
     call error(my_name,"bonds_done == 3 not implemented yet")
   end select
 
-end subroutine saturate_tetrahedral
+end subroutine saturate_4_tetrahedral
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end module mod_cell_saturate
