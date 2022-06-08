@@ -24,6 +24,7 @@ subroutine cell_saturate(cin,cout)
   character(*), parameter :: my_name = "cell_saturate"
   real(dbl), dimension(:,:), allocatable :: dm
   logical, dimension(:,:), allocatable :: lm
+  integer, dimension(:), allocatable :: saturation_hydrogens
   integer :: i
   integer :: n
   integer :: err_n
@@ -37,15 +38,28 @@ subroutine cell_saturate(cin,cout)
   allocate(lm(n,n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
+  allocate(saturation_hydrogens(n),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
   ! Output is not a periodic cell, cell constants are meaningless
   cout%a = 0.0
   cout%b = 0.0
   cout%c = 0.0
 
   call get_connectivity_matrix(cin%xyz%e,cin%xyz%x,cin%xyz%y,cin%xyz%z,dm,lm)
+  call count_saturation_hydrogens(cin%xyz%e,lm,saturation_hydrogens)
 
   do i = 1, n
+    if (saturation_hydrogens(i) == 0) cycle
+    ! get translation and rotation parameters
+
+    ! send atom to saturate (and its neighbors) to get saturation hydrogens
     call atom_saturate(i,cin,lm)
+
+    ! rotate and translate to get the correct hydrogens' positions
+
+    ! add hydrogens' coordinates to the appropriate structure
+
   end do
 
   deallocate(dm,stat=err_n,errmsg=err_msg)
@@ -54,9 +68,36 @@ subroutine cell_saturate(cin,cout)
   deallocate(lm,stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
+  deallocate(saturation_hydrogens,stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
 end subroutine cell_saturate
 
 ! Private !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine count_saturation_hydrogens(e,lm,saturation_hydrogens)
+
+  character(2), dimension(:), intent(in) :: e
+  logical, dimension(:,:), intent(in) :: lm
+  integer, dimension(:), intent(out) :: saturation_hydrogens
+  integer :: n
+  integer :: i
+  integer :: bonds_done
+  integer :: bonds_max
+  integer :: bonds_to_add
+
+  saturation_hydrogens = 0
+  n = size(e)
+  do i = 1, n
+    bonds_max = pt_get_max_bonds(e(i))
+    bonds_done = count_true(lm(:,i))
+    bonds_to_add = bonds_max - bonds_done
+    if (bonds_to_add > 0) saturation_hydrogens(i) = bonds_to_add
+  end do
+
+end subroutine count_saturation_hydrogens
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine atom_saturate(i,cin,lm)
 
