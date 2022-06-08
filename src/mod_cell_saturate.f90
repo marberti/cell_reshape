@@ -26,7 +26,15 @@ subroutine cell_saturate(cin,cout)
   logical, dimension(:,:), allocatable :: lm
   integer, dimension(:), allocatable :: saturation_hydrogens
   integer :: i
+  integer :: j
+  integer :: indx
   integer :: n
+  integer :: an
+  real(dbl), dimension(:,:), allocatable :: atoms
+  real(dbl), dimension(3) :: translation
+  real(dbl) :: alp
+  real(dbl) :: bet
+  real(dbl) :: gam
   integer :: err_n
   character(120) :: err_msg
 
@@ -51,15 +59,63 @@ subroutine cell_saturate(cin,cout)
 
   do i = 1, n
     if (saturation_hydrogens(i) == 0) cycle
-    ! get translation and rotation parameters
+
+    ! select atom to saturate and its neighbors
+    an = count_true(lm(:,i)) + 1
+    allocate(atoms(3,an),stat=err_n,errmsg=err_msg)
+    if (err_n /= 0) call error(my_name,err_msg)
+    atoms(1,1) = cin%xyz%x(i)
+    atoms(2,1) = cin%xyz%y(i)
+    atoms(3,1) = cin%xyz%z(i)
+    indx = 2
+    do j = 1, n
+      if (indx > an) exit
+      if (lm(j,i).eqv..true.) then
+        atoms(1,indx) = cin%xyz%x(j)
+        atoms(2,indx) = cin%xyz%y(j)
+        atoms(3,indx) = cin%xyz%z(j)
+        indx = indx + 1
+      end if
+    end do
+
+#ifdef DEBUG
+    write(*,*) "DEBUG: unsatured atom: ",i," (H to add: ",&
+      saturation_hydrogens(i),")"
+    write(*,*) "DEBUG: standard orientation"
+    do j = 1, an
+      write(*,*) "DEBUG: ",atoms(1,j),atoms(2,j),atoms(3,j)
+    end do
+#endif
+
+    ! translate atoms
+    translation(1) = atoms(1,1)
+    translation(2) = atoms(2,1)
+    translation(3) = atoms(3,1)
+    atoms(1,:) = atoms(1,:) - translation(1)
+    atoms(2,:) = atoms(2,:) - translation(2)
+    atoms(3,:) = atoms(3,:) - translation(3)
+
+#ifdef DEBUG
+    write(*,*) "DEBUG: after translation"
+    do j = 1, an
+      write(*,*) "DEBUG: ",atoms(1,j),atoms(2,j),atoms(3,j)
+    end do
+#endif
+
+    ! rotate atoms
+    call get_rotation_angles(atoms,alp,bet,gam)
+    call rotate_atoms(atoms,-alp,-bet,-gam,.false.)
 
     ! send atom to saturate (and its neighbors) to get saturation hydrogens
-    call atom_saturate(i,cin,lm)
+    !call atom_saturate(i,cin,lm)
 
     ! rotate and translate to get the correct hydrogens' positions
 
     ! add hydrogens' coordinates to the appropriate structure
 
+    ! deallocate
+    deallocate(atoms,stat=err_n,errmsg=err_msg)
+    if (err_n /= 0) call error(my_name,err_msg)
   end do
 
   deallocate(dm,stat=err_n,errmsg=err_msg)
@@ -96,6 +152,29 @@ subroutine count_saturation_hydrogens(e,lm,saturation_hydrogens)
   end do
 
 end subroutine count_saturation_hydrogens
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine get_rotation_angles(atoms,alp,bet,gam)
+
+  real(dbl), dimension(:,:), intent(in) :: atoms
+  real(dbl), intent(out) :: alp
+  real(dbl), intent(out) :: bet
+  real(dbl), intent(out) :: gam
+
+end subroutine get_rotation_angles
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine rotate_atoms(atoms,alp,bet,gam,reverse)
+
+  real(dbl), dimension(:,:), intent(inout) :: atoms
+  real(dbl), intent(in) :: alp
+  real(dbl), intent(in) :: bet
+  real(dbl), intent(in) :: gam
+  logical, intent(in) :: reverse
+
+end subroutine rotate_atoms
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
