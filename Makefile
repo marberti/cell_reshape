@@ -34,6 +34,10 @@ default: $(EXE)
 .PHONY: fresh
 fresh: clean $(EXE)
 
+.PHONY: debug
+debug: FLAGS += -DDEBUG
+debug: fresh
+
 # utility -------------------------------------------------
 .PHONY: clean
 clean:
