@@ -33,75 +33,45 @@ program main
   molecule_in(3,4) = -0.343333_dbl
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!  ROT X
 
-  axis = 1
-  angle_deg = 0.0_dbl
-  
-  do
-    if (angle_deg > 360.0_dbl) exit
+  do axis = 1, 3
+    angle_deg = 0.0_dbl
+    do
+      if (angle_deg > 360.0_dbl) exit
 
-    angle_rad = deg2rad(angle_deg)
+      angle_rad = deg2rad(angle_deg)
 
-    do i = 1, mlen
-      call rotate3d(molecule_in(:,i),molecule_out(:,i),axis,angle_rad)
+      do i = 1, mlen
+        call rotate3d(molecule_in(:,i),molecule_out(:,i),axis,angle_rad)
+      end do
+
+      write(*,*) mlen
+      write(*,'(1X,A,I1,A,F6.1,A)') "ROT ",axis," -> ",angle_deg," deg"
+      do i = 1, mlen
+        write(*,*) elem(i),molecule_out(1,i),molecule_out(2,i),molecule_out(3,i)
+      end do
+
+      angle_deg = angle_Deg + 5.0_dbl
     end do
 
-    write(*,*) mlen
-    write(*,'(1X,A,F6.1,A)') "ROT X -> ",angle_deg," deg"
-    do i = 1, mlen
-      write(*,*) elem(i),molecule_out(1,i),molecule_out(2,i),molecule_out(3,i)
+    angle_deg = 0.0_dbl
+    do
+      if (angle_deg < -360.0_dbl) exit
+
+      angle_rad = deg2rad(angle_deg)
+
+      do i = 1, mlen
+        call rotate3d(molecule_in(:,i),molecule_out(:,i),axis,angle_rad)
+      end do
+
+      write(*,*) mlen
+      write(*,'(1X,A,I1,A,F6.1,A)') "ROT ",axis," -> ",angle_deg," deg"
+      do i = 1, mlen
+        write(*,*) elem(i),molecule_out(1,i),molecule_out(2,i),molecule_out(3,i)
+      end do
+
+      angle_deg = angle_Deg - 5.0_dbl
     end do
-
-    angle_deg = angle_Deg + 5.0_dbl
-  end do
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!  ROT Y
-
-  axis = 2
-  angle_deg = 0.0_dbl
-  
-  do
-    if (angle_deg > 360.0_dbl) exit
-
-    angle_rad = deg2rad(angle_deg)
-
-    do i = 1, mlen
-      call rotate3d(molecule_in(:,i),molecule_out(:,i),axis,angle_rad)
-    end do
-
-    write(*,*) mlen
-    write(*,'(1X,A,F6.1,A)') "ROT X -> ",angle_deg," deg"
-    do i = 1, mlen
-      write(*,*) elem(i),molecule_out(1,i),molecule_out(2,i),molecule_out(3,i)
-    end do
-
-    angle_deg = angle_Deg + 5.0_dbl
-  end do
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!  ROT Z
-
-  axis = 3
-  angle_deg = 0.0_dbl
-  
-  do
-    if (angle_deg > 360.0_dbl) exit
-
-    angle_rad = deg2rad(angle_deg)
-
-    do i = 1, mlen
-      call rotate3d(molecule_in(:,i),molecule_out(:,i),axis,angle_rad)
-    end do
-
-    write(*,*) mlen
-    write(*,'(1X,A,F6.1,A)') "ROT X -> ",angle_deg," deg"
-    do i = 1, mlen
-      write(*,*) elem(i),molecule_out(1,i),molecule_out(2,i),molecule_out(3,i)
-    end do
-
-    angle_deg = angle_Deg + 5.0_dbl
   end do
 
 end program main
