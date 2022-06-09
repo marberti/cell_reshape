@@ -32,6 +32,7 @@ subroutine cell_saturate(cin,cout)
   integer :: n
   integer :: an
   real(dbl), dimension(:,:), allocatable :: atoms
+  real(dbl), dimension(:,:), allocatable :: h_pos
   real(dbl), dimension(3) :: translation
   real(dbl) :: alp
   real(dbl) :: bet
@@ -60,6 +61,10 @@ subroutine cell_saturate(cin,cout)
 
   do i = 1, n
     if (saturation_hydrogens(i) == 0) cycle
+
+    ! allocate h_pos
+    allocate(h_pos(3,saturation_hydrogens(i)),stat=err_n,errmsg=err_msg)
+    if (err_n /= 0) call error(my_name,err_msg)
 
     ! select atom to saturate and its neighbors
     an = count_true(lm(:,i)) + 1
@@ -109,13 +114,25 @@ subroutine cell_saturate(cin,cout)
     call get_rotation_angles(atoms,alp,bet,gam)
 
     ! get saturation hydrogens
-    !call atom_saturate(i,cin,lm)
+    call atom_saturate(cin%xyz%e(i),h_pos)
 
     ! rotate and translate to get the correct hydrogens' positions
+    call rotate_hydrogens(h_pos,alp,bet,gam)
+    h_pos(1,:) = h_pos(1,:) + translation(1)
+    h_pos(2,:) = h_pos(2,:) + translation(2)
+    h_pos(3,:) = h_pos(3,:) + translation(3)
 
     ! add hydrogens' coordinates to the appropriate structure
+    !@@@
+    do j = 1, size(h_pos,2)
+      write(*,'("H",3(3X,F10.6))') h_pos(1,j), h_pos(2,j), h_pos(3,j)
+    end do
+    !@@@
 
     ! deallocate
+    deallocate(h_pos,stat=err_n,errmsg=err_msg)
+    if (err_n /= 0) call error(my_name,err_msg)
+
     deallocate(atoms,stat=err_n,errmsg=err_msg)
     if (err_n /= 0) call error(my_name,err_msg)
   end do
@@ -288,22 +305,16 @@ end function get_angle
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine atom_saturate(i,cin,lm)
+subroutine atom_saturate(e,h_pos)
 
-  integer, intent(in) :: i
-  type(cell_t), intent(in) :: cin
-  logical, dimension(:,:), intent(in) :: lm
+  character(2), intent(in) :: e
+  real(dbl), dimension(:,:), intent(out) :: h_pos
   character(*), parameter :: my_name = "atom_saturate"
-  integer :: bonds_done
   integer :: bonds_max
   real(dbl) :: dist
 
-  bonds_max = pt_get_max_bonds(cin%xyz%e(i))
-  bonds_done = count_true(lm(:,i))
-
-  if (bonds_done >= bonds_max) return
-
-  dist = pt_get_r_mean("H ") + pt_get_r_mean(cin%xyz%e(i))
+  bonds_max = pt_get_max_bonds(e)
+  dist = pt_get_r_mean("H ") + pt_get_r_mean(e)
 
   select case (bonds_max)
   case (1)
@@ -313,16 +324,34 @@ subroutine atom_saturate(i,cin,lm)
   case (3)
     call error(my_name,"bonds_max == 3 not implemented yet")
   case (4)
-    call saturate_4_tetrahedral(bonds_done,dist)
+    call saturate_4_tetrahedral(dist,h_pos)
   case default
     call error(my_name,"bonds_max > 4 not implemented yet")
   end select
 
-  !@@@
-  stop 33
-  !@@@
-
 end subroutine atom_saturate
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine rotate_hydrogens(h_pos,alp,bet,gam)
+
+  real(dbl), dimension(:,:), intent(inout) :: h_pos
+  real(dbl), intent(in) :: alp
+  real(dbl), intent(in) :: bet
+  real(dbl), intent(in) :: gam
+  real(dbl), dimension(3) :: p_rot
+  integer :: i
+
+  do i = 1, size(h_pos,2)
+      call rotate3d(h_pos(:,i),p_rot,1,-gam)
+      h_pos(:,i) = p_rot
+      call rotate3d(h_pos(:,i),p_rot,2,-bet)
+      h_pos(:,i) = p_rot
+      call rotate3d(h_pos(:,i),p_rot,3,alp)
+      h_pos(:,i) = p_rot
+  end do
+
+end subroutine rotate_hydrogens
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -371,35 +400,47 @@ end subroutine saturate_3_trigonal_pyramidal
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine saturate_4_tetrahedral(bonds_done,d)
+subroutine saturate_4_tetrahedral(d,h_pos)
 
-  integer, intent(in) :: bonds_done
   real(dbl), intent(in) :: d
-  character(*), parameter :: my_name = "saturate_tetrahedral"
+  real(dbl), dimension(:,:), intent(out) :: h_pos
+  integer :: h_n
   real(dbl) :: theta
   real(dbl) :: phi
 
-  select case (bonds_done)
-  case (0)
-    theta = 0.0_dbl
-    phi   = 0.0_dbl
-    print *, "H", d*cos(theta), d*sin(theta)*sin(phi), d*sin(theta)*cos(phi)
-    theta = 1.9106332356470423_dbl
-    phi   = 0.0_dbl
-    print *, "H", d*cos(theta), d*sin(theta)*sin(phi), d*sin(theta)*cos(phi)
-    theta = 1.9106332356470423_dbl
-    phi   = 2.0943951023931953_dbl
-    print *, "H", d*cos(theta), d*sin(theta)*sin(phi), d*sin(theta)*cos(phi)
+  h_n = size(h_pos,2)
+
+  if (h_n >= 1) then
     theta = 1.9106332356470423_dbl
     phi   = 4.1887902047863905_dbl
-    print *, "H", d*cos(theta), d*sin(theta)*sin(phi), d*sin(theta)*cos(phi)
-  case (1)
-    call error(my_name,"bonds_done == 1 not implemented yet")
-  case (2)
-    call error(my_name,"bonds_done == 2 not implemented yet")
-  case (3)
-    call error(my_name,"bonds_done == 3 not implemented yet")
-  end select
+    h_pos(1,1) = d*cos(theta)
+    h_pos(2,1) = d*sin(theta)*sin(phi)
+    h_pos(3,1) = d*sin(theta)*cos(phi)
+  end if
+
+  if (h_n >= 2) then
+    theta = 1.9106332356470423_dbl
+    phi   = 2.0943951023931953_dbl
+    h_pos(1,2) = d*cos(theta)
+    h_pos(2,2) = d*sin(theta)*sin(phi)
+    h_pos(3,2) = d*sin(theta)*cos(phi)
+  end if
+
+  if (h_n >= 3) then
+    theta = 1.9106332356470423_dbl
+    phi   = 0.0_dbl
+    h_pos(1,3) = d*cos(theta)
+    h_pos(2,3) = d*sin(theta)*sin(phi)
+    h_pos(3,3) = d*sin(theta)*cos(phi)
+  end if
+
+  if (h_n >= 4) then
+    theta = 0.0_dbl
+    phi   = 0.0_dbl
+    h_pos(1,4) = d*cos(theta)
+    h_pos(2,4) = d*sin(theta)*sin(phi)
+    h_pos(3,4) = d*sin(theta)*cos(phi)
+  end if
 
 end subroutine saturate_4_tetrahedral
 
