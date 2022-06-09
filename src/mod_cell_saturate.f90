@@ -245,12 +245,12 @@ subroutine get_rotation_angles(atoms,alp,bet,gam)
   ! set gam
   if (an > 2) then
     gam = get_angle(atoms_in(2,3),atoms_in(3,3))
-#ifdef DEBUG
     do i = 1, an
       call rotate3d(atoms_in(:,i),atoms_out(:,i),1,gam)
     end do
     atoms_in = atoms_out
 
+#ifdef DEBUG
     write(*,*) "DEBUG: ",my_name, " after x rotation"
     do i = 1, an
       write(*,'(A,3(F10.6,3X))') " DEBUG: ",&
@@ -259,6 +259,30 @@ subroutine get_rotation_angles(atoms,alp,bet,gam)
 #endif
   else
     gam = 0.0_dbl
+  end if
+
+  ! check gam
+  if ((an > 3).and.(atoms_in(2,4) < 0.0_dbl)) then
+    ! rotate back
+    do i = 1, an
+      call rotate3d(atoms_in(:,i),atoms_out(:,i),1,-gam)
+    end do
+    atoms_in = atoms_out
+
+    ! set new gam
+    gam = get_angle(atoms_in(2,4),atoms_in(3,4))
+    do i = 1, an
+      call rotate3d(atoms_in(:,i),atoms_out(:,i),1,gam)
+    end do
+    atoms_in = atoms_out
+
+#ifdef DEBUG
+    write(*,*) "DEBUG: ",my_name, " after corrected x rotation"
+    do i = 1, an
+      write(*,'(A,3(F10.6,3X))') " DEBUG: ",&
+        atoms_in(1,i),atoms_in(2,i),atoms_in(3,i)
+    end do
+#endif
   end if
 
 #ifdef DEBUG
