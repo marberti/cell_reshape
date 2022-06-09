@@ -6,6 +6,7 @@ module mod_cell_saturate
   use mod_periodic_table
   use mod_logical
   use mod_connectivity
+  use mod_rotation
 
   implicit none
   save
@@ -87,10 +88,12 @@ subroutine cell_saturate(cin,cout)
     end do
 #endif
 
-    ! translate atoms
+    ! get translation vector
     translation(1) = atoms(1,1)
     translation(2) = atoms(2,1)
     translation(3) = atoms(3,1)
+
+    ! translate atoms (in order to get rotation angles)
     atoms(1,:) = atoms(1,:) - translation(1)
     atoms(2,:) = atoms(2,:) - translation(2)
     atoms(3,:) = atoms(3,:) - translation(3)
@@ -102,11 +105,10 @@ subroutine cell_saturate(cin,cout)
     end do
 #endif
 
-    ! rotate atoms
+    ! get rotation angles
     call get_rotation_angles(atoms,alp,bet,gam)
-    call rotate_atoms(atoms,-alp,-bet,-gam,.false.)
 
-    ! send atom to saturate (and its neighbors) to get saturation hydrogens
+    ! get saturation hydrogens
     !call atom_saturate(i,cin,lm)
 
     ! rotate and translate to get the correct hydrogens' positions
@@ -161,20 +163,128 @@ subroutine get_rotation_angles(atoms,alp,bet,gam)
   real(dbl), intent(out) :: alp
   real(dbl), intent(out) :: bet
   real(dbl), intent(out) :: gam
+  character(*), parameter :: my_name = "get_rotation_angles"
+  integer :: an
+  integer :: i
+  real(dbl), dimension(:,:), allocatable :: atoms_in
+  real(dbl), dimension(:,:), allocatable :: atoms_out
+  integer :: err_n
+  character(120) :: err_msg
+
+  an = size(atoms,2)
+
+  allocate(atoms_in(3,an),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
+  allocate(atoms_out(3,an),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
+  atoms_in = atoms
+
+#ifdef DEBUG
+  write(*,*) "DEBUG: ",my_name, " before rotation"
+  do i = 1, an
+    write(*,'(A,3(F10.6,3X))') " DEBUG: ",&
+      atoms_in(1,i),atoms_in(2,i),atoms_in(3,i)
+  end do
+#endif
+
+  ! set alp and bet
+  if (an > 1) then
+    ! set alp
+    alp = get_angle(atoms_in(2,2),atoms_in(1,2))
+    do i = 1, an
+      call rotate3d(atoms_in(:,i),atoms_out(:,i),3,-alp)
+    end do
+    atoms_in = atoms_out
+
+#ifdef DEBUG
+    write(*,*) "DEBUG: ",my_name, " after z rotation"
+    do i = 1, an
+      write(*,'(A,3(F10.6,3X))') " DEBUG: ",&
+        atoms_in(1,i),atoms_in(2,i),atoms_in(3,i)
+    end do
+#endif
+
+    ! set bet
+    bet = get_angle(atoms_in(3,2),atoms_in(1,2))
+    do i = 1, an
+      call rotate3d(atoms_in(:,i),atoms_out(:,i),2,bet)
+    end do
+    atoms_in = atoms_out
+
+#ifdef DEBUG
+    write(*,*) "DEBUG: ",my_name, " after y rotation"
+    do i = 1, an
+      write(*,'(A,3(F10.6,3X))') " DEBUG: ",&
+        atoms_in(1,i),atoms_in(2,i),atoms_in(3,i)
+    end do
+#endif
+  else
+    alp = 0.0_dbl
+    bet = 0.0_dbl
+  end if
+
+  ! set gam
+  if (an > 2) then
+    gam = get_angle(atoms_in(2,3),atoms_in(3,3))
+#ifdef DEBUG
+    do i = 1, an
+      call rotate3d(atoms_in(:,i),atoms_out(:,i),1,gam)
+    end do
+    atoms_in = atoms_out
+
+    write(*,*) "DEBUG: ",my_name, " after x rotation"
+    do i = 1, an
+      write(*,'(A,3(F10.6,3X))') " DEBUG: ",&
+        atoms_in(1,i),atoms_in(2,i),atoms_in(3,i)
+    end do
+#endif
+  else
+    gam = 0.0_dbl
+  end if
+
+#ifdef DEBUG
+  write(*,'(A,A,A,3(3X,F9.6))') " DEBUG: ",&
+    my_name," angles -> ",alp, bet, gam
+#endif
+
+  deallocate(atoms_in,stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
+  deallocate(atoms_out,stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
 
 end subroutine get_rotation_angles
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine rotate_atoms(atoms,alp,bet,gam,reverse)
+real(dbl) function get_angle(num,den)
 
-  real(dbl), dimension(:,:), intent(inout) :: atoms
-  real(dbl), intent(in) :: alp
-  real(dbl), intent(in) :: bet
-  real(dbl), intent(in) :: gam
-  logical, intent(in) :: reverse
+  real(dbl), intent(in) :: num
+  real(dbl), intent(in) :: den
 
-end subroutine rotate_atoms
+  if (abs(den) < 1.0E-16_dbl) then
+    if (abs(num) < 1.0E-16_dbl) then
+      get_angle = 0.0_dbl
+    else
+      if (num > 0.0_dbl) then
+        get_angle = pi/2.0_dbl
+      else if (num < 0.0_dbl) then
+        get_angle = 3.0_dbl*pi/2.0_dbl
+      end if
+    end if
+  else
+    get_angle = atan(num/den)
+    if (den < 0.0_dbl) then
+      get_angle = get_angle + pi
+    end if
+    if (get_angle < 0.0_dbl) then
+      get_angle = get_angle + 2.0_dbl*pi
+    end if
+  end if
+
+end function get_angle
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -208,7 +318,9 @@ subroutine atom_saturate(i,cin,lm)
     call error(my_name,"bonds_max > 4 not implemented yet")
   end select
 
+  !@@@
   stop 33
+  !@@@
 
 end subroutine atom_saturate
 
