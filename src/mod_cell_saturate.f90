@@ -174,29 +174,23 @@ end subroutine count_saturation_hydrogens
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine get_rotation_angles(atoms,alp,bet,gam)
+subroutine get_rotation_angles(atoms_in,alp,bet,gam)
 
-  real(dbl), dimension(:,:), intent(in) :: atoms
+  real(dbl), dimension(:,:), intent(inout) :: atoms_in
   real(dbl), intent(out) :: alp
   real(dbl), intent(out) :: bet
   real(dbl), intent(out) :: gam
   character(*), parameter :: my_name = "get_rotation_angles"
   integer :: an
   integer :: i
-  real(dbl), dimension(:,:), allocatable :: atoms_in
   real(dbl), dimension(:,:), allocatable :: atoms_out
   integer :: err_n
   character(120) :: err_msg
 
-  an = size(atoms,2)
-
-  allocate(atoms_in(3,an),stat=err_n,errmsg=err_msg)
-  if (err_n /= 0) call error(my_name,err_msg)
+  an = size(atoms_in,2)
 
   allocate(atoms_out(3,an),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
-
-  atoms_in = atoms
 
 #ifdef DEBUG
   write(*,*) "DEBUG: ",my_name, " before rotation"
@@ -207,7 +201,7 @@ subroutine get_rotation_angles(atoms,alp,bet,gam)
 #endif
 
   ! set alp and bet
-  if (an > 1) then
+  if (an >= 2) then
     ! set alp
     alp = get_angle(atoms_in(2,2),atoms_in(1,2))
     do i = 1, an
@@ -243,7 +237,7 @@ subroutine get_rotation_angles(atoms,alp,bet,gam)
   end if
 
   ! set gam
-  if (an > 2) then
+  if (an >= 3) then
     gam = get_angle(atoms_in(2,3),atoms_in(3,3))
     do i = 1, an
       call rotate3d(atoms_in(:,i),atoms_out(:,i),1,gam)
@@ -262,7 +256,7 @@ subroutine get_rotation_angles(atoms,alp,bet,gam)
   end if
 
   ! check gam
-  if ((an > 3).and.(atoms_in(2,4) < 0.0_dbl)) then
+  if ((an >= 4).and.(atoms_in(2,4) < 0.0_dbl)) then
     ! rotate back
     do i = 1, an
       call rotate3d(atoms_in(:,i),atoms_out(:,i),1,-gam)
@@ -275,6 +269,10 @@ subroutine get_rotation_angles(atoms,alp,bet,gam)
       call rotate3d(atoms_in(:,i),atoms_out(:,i),1,gam)
     end do
     atoms_in = atoms_out
+
+    ! invert position of atoms 3 and 4
+    atoms_in(:,3) = atoms_out(:,4)
+    atoms_in(:,4) = atoms_out(:,3)
 
 #ifdef DEBUG
     write(*,*) "DEBUG: ",my_name, " after corrected x rotation"
@@ -289,9 +287,6 @@ subroutine get_rotation_angles(atoms,alp,bet,gam)
   write(*,'(A,A,A,3(3X,F9.6))') " DEBUG: ",&
     my_name," angles -> ",alp, bet, gam
 #endif
-
-  deallocate(atoms_in,stat=err_n,errmsg=err_msg)
-  if (err_n /= 0) call error(my_name,err_msg)
 
   deallocate(atoms_out,stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
