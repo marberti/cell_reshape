@@ -110,11 +110,11 @@ subroutine cell_saturate(cin,cout)
     end do
 #endif
 
-    ! get rotation angles
-    call get_rotation_angles(atoms,alp,bet,gam)
+    ! rotate atoms and get rotation angles
+    call rotate_atoms(atoms,alp,bet,gam)
 
     ! get saturation hydrogens
-    call atom_saturate(cin%xyz%e(i),h_pos)
+    call saturate_atom(cin%xyz%e(i),h_pos)
 
     ! rotate and translate to get the correct hydrogens' positions
     call rotate_hydrogens(h_pos,alp,bet,gam)
@@ -174,13 +174,13 @@ end subroutine count_saturation_hydrogens
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine get_rotation_angles(atoms_in,alp,bet,gam)
+subroutine rotate_atoms(atoms_in,alp,bet,gam)
 
   real(dbl), dimension(:,:), intent(inout) :: atoms_in
   real(dbl), intent(out) :: alp
   real(dbl), intent(out) :: bet
   real(dbl), intent(out) :: gam
-  character(*), parameter :: my_name = "get_rotation_angles"
+  character(*), parameter :: my_name = "rotate_atoms"
   integer :: an
   integer :: i
   real(dbl), dimension(:,:), allocatable :: atoms_out
@@ -291,7 +291,7 @@ subroutine get_rotation_angles(atoms_in,alp,bet,gam)
   deallocate(atoms_out,stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
-end subroutine get_rotation_angles
+end subroutine rotate_atoms
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -324,11 +324,11 @@ end function get_angle
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine atom_saturate(e,h_pos)
+subroutine saturate_atom(e,h_pos)
 
   character(2), intent(in) :: e
   real(dbl), dimension(:,:), intent(out) :: h_pos
-  character(*), parameter :: my_name = "atom_saturate"
+  character(*), parameter :: my_name = "saturate_atom"
   integer :: bonds_max
   real(dbl) :: dist
 
@@ -348,7 +348,7 @@ subroutine atom_saturate(e,h_pos)
     call error(my_name,"bonds_max > 4 not implemented yet")
   end select
 
-end subroutine atom_saturate
+end subroutine saturate_atom
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
