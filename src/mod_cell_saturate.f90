@@ -29,10 +29,13 @@ subroutine cell_saturate(cin,cout)
   integer :: i
   integer :: j
   integer :: indx
+  integer :: all_h_indx
   integer :: n
+  integer :: n_out
   integer :: an
   real(dbl), dimension(:,:), allocatable :: atoms
   real(dbl), dimension(:,:), allocatable :: h_pos
+  real(dbl), dimension(:,:), allocatable :: all_h_pos
   real(dbl), dimension(3) :: translation
   real(dbl) :: alp
   real(dbl) :: bet
@@ -42,6 +45,7 @@ subroutine cell_saturate(cin,cout)
 
   n = cin%xyz%n
 
+  ! allocation section
   allocate(dm(n,n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
@@ -51,14 +55,13 @@ subroutine cell_saturate(cin,cout)
   allocate(saturation_hydrogens(n),stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
-  ! Output is not a periodic cell, cell constants are meaningless
-  cout%a = 0.0
-  cout%b = 0.0
-  cout%c = 0.0
-
   call get_connectivity_matrix(cin%xyz%e,cin%xyz%x,cin%xyz%y,cin%xyz%z,dm,lm)
   call count_saturation_hydrogens(cin%xyz%e,lm,saturation_hydrogens)
 
+  allocate(all_h_pos(3,sum(saturation_hydrogens)),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
+  all_h_indx = 1
   do i = 1, n
     if (saturation_hydrogens(i) == 0) cycle
 
@@ -122,12 +125,11 @@ subroutine cell_saturate(cin,cout)
     h_pos(2,:) = h_pos(2,:) + translation(2)
     h_pos(3,:) = h_pos(3,:) + translation(3)
 
-    ! add hydrogens' coordinates to the appropriate structure
-    !@@@
-    do j = 1, size(h_pos,2)
-      write(*,'("H",3(3X,F10.6))') h_pos(1,j), h_pos(2,j), h_pos(3,j)
+    ! add hydrogens' coordinates of this iteration to the total
+    do j = 1, saturation_hydrogens(i)
+      all_h_pos(:,all_h_indx) = h_pos(:,j)
+      all_h_indx = all_h_indx + 1
     end do
-    !@@@
 
     ! deallocate
     deallocate(h_pos,stat=err_n,errmsg=err_msg)
@@ -137,6 +139,38 @@ subroutine cell_saturate(cin,cout)
     if (err_n /= 0) call error(my_name,err_msg)
   end do
 
+  ! build cout
+  ! Output is not a periodic cell, cell constants are meaningless
+  cout%a = 0.0
+  cout%b = 0.0
+  cout%c = 0.0
+  n_out  = n + sum(saturation_hydrogens)
+  cout%xyz%n = n_out
+
+  allocate(cout%xyz%e(n_out),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+  allocate(cout%xyz%x(n_out),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+  allocate(cout%xyz%y(n_out),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+  allocate(cout%xyz%z(n_out),stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
+  do i = 1, n
+    cout%xyz%e(i) = cin%xyz%e(i)
+    cout%xyz%x(i) = cin%xyz%x(i)
+    cout%xyz%y(i) = cin%xyz%y(i)
+    cout%xyz%z(i) = cin%xyz%z(i)
+  end do
+
+  do i = n+1, n_out
+    cout%xyz%e(i) = "H"
+    cout%xyz%x(i) = all_h_pos(1,i-n)
+    cout%xyz%y(i) = all_h_pos(2,i-n)
+    cout%xyz%z(i) = all_h_pos(3,i-n)
+  end do
+
+  ! deallocation section
   deallocate(dm,stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
@@ -144,6 +178,9 @@ subroutine cell_saturate(cin,cout)
   if (err_n /= 0) call error(my_name,err_msg)
 
   deallocate(saturation_hydrogens,stat=err_n,errmsg=err_msg)
+  if (err_n /= 0) call error(my_name,err_msg)
+
+  deallocate(all_h_pos,stat=err_n,errmsg=err_msg)
   if (err_n /= 0) call error(my_name,err_msg)
 
 end subroutine cell_saturate
