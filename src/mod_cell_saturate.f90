@@ -430,6 +430,7 @@ subroutine saturate_4_tetrahedral(d,atoms,h_pos)
   real(dbl), dimension(3) :: p
   integer :: an
   integer :: hn
+  real(dbl) :: dp
   real(dbl) :: alpha
   real(dbl) :: beta
   real(dbl) :: alpha_c
@@ -459,67 +460,29 @@ subroutine saturate_4_tetrahedral(d,atoms,h_pos)
     call rotate3d(h_pos(:,2),p,1,beta_c)
     h_pos(:,3) = p
   case (3)
-    alpha = get_angle(atoms(3,3),atoms(1,3))
-    alpha_c = pi + alpha/2.0_dbl
-    beta_c  = 2.0943951023931953_dbl
-    call rotate3d(h_pos(:,1),p,2,alpha_c)
-    h_pos(:,1) = p
-    call rotate3d(h_pos(:,1),p,1,beta_c)
-    h_pos(:,1) = p
-    call rotate3d(h_pos(:,1),p,1,beta_c)
-    h_pos(:,2) = p
-    !@@@
-    write(*,*) "alpha = ",alpha
-    write(*,*) "alpha_c = ",alpha_c
-    !@@@
+    alpha_c = 1.0471975512_dbl
+    h_pos(2,1) = d*sin(alpha_c)
+    dp = d*cos(alpha_c)
+    beta = get_angle(atoms(3,3),atoms(1,3))
+    beta_c = pi - beta/2.0_dbl
+    h_pos(3,1) = dp*sin(-beta_c)
+    h_pos(1,1) = dp*cos(-beta_c)
+    h_pos(1,2) =  h_pos(1,1)
+    h_pos(2,2) = -h_pos(2,1)
+    h_pos(3,2) =  h_pos(3,1)
   case (4)
-    alpha = get_angle(atoms(3,3),atoms(1,3))
-    beta  = get_angle(atoms(2,4),atoms(3,4))
-    alpha_c = pi + alpha/2.0_dbl
-    beta_c  = pi + beta/2.0_dbl
-    call rotate3d(h_pos(:,1),p,2,alpha_c)
-    h_pos(:,1) = p
-    call rotate3d(h_pos(:,1),p,1,beta_c)
-    h_pos(:,1) = p
+    ! FIXME Logic of case (4) can be improved
+    alpha = get_angle(atoms(2,4),sqrt(atoms(1,4)**2 + atoms(3,4)**2))
+    alpha_c = (pi - alpha) / 2.0_dbl
+    h_pos(2,1) = d*sin(-alpha_c)
+    dp = d*cos(-alpha_c)
+    beta = get_angle(atoms(3,3),atoms(1,3))
+    beta_c = pi - beta/2.0_dbl
+    h_pos(3,1) = dp*sin(-beta_c)
+    h_pos(1,1) = dp*cos(-beta_c)
   case default
     call error(my_name,"wrong size of atoms argument")
   end select
-
-
-
-!  hn = size(h_pos,2)
-!
-!  if (hn >= 1) then
-!    theta = 1.9106332356470423_dbl
-!    phi   = 4.1887902047863905_dbl
-!    h_pos(1,1) = d*cos(theta)
-!    h_pos(2,1) = d*sin(theta)*sin(phi)
-!    h_pos(3,1) = d*sin(theta)*cos(phi)
-!  end if
-!
-!  if (hn >= 2) then
-!    theta = 1.9106332356470423_dbl
-!    phi   = 2.0943951023931953_dbl
-!    h_pos(1,2) = d*cos(theta)
-!    h_pos(2,2) = d*sin(theta)*sin(phi)
-!    h_pos(3,2) = d*sin(theta)*cos(phi)
-!  end if
-!
-!  if (hn >= 3) then
-!    theta = 1.9106332356470423_dbl
-!    phi   = 0.0_dbl
-!    h_pos(1,3) = d*cos(theta)
-!    h_pos(2,3) = d*sin(theta)*sin(phi)
-!    h_pos(3,3) = d*sin(theta)*cos(phi)
-!  end if
-!
-!  if (hn >= 4) then
-!    theta = 0.0_dbl
-!    phi   = 0.0_dbl
-!    h_pos(1,4) = d*cos(theta)
-!    h_pos(2,4) = d*sin(theta)*sin(phi)
-!    h_pos(3,4) = d*sin(theta)*cos(phi)
-!  end if
 
 end subroutine saturate_4_tetrahedral
 
