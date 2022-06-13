@@ -127,7 +127,6 @@ subroutine cell_saturate(cin,cout)
     do j = 1, size(h_pos,2)
       write(*,'("H",3(3X,F10.6))') h_pos(1,j), h_pos(2,j), h_pos(3,j)
     end do
-    stop 42
     !@@@
 
     ! deallocate
@@ -153,7 +152,7 @@ end subroutine cell_saturate
 
 subroutine count_saturation_hydrogens(e,lm,saturation_hydrogens)
 
-  character(2), dimension(:), intent(in) :: e
+  character(*), dimension(:), intent(in) :: e
   logical, dimension(:,:), intent(in) :: lm
   integer, dimension(:), intent(out) :: saturation_hydrogens
   integer :: n
@@ -327,7 +326,7 @@ end function get_angle
 
 subroutine saturate_atom(e,atoms,h_pos)
 
-  character(2), intent(in) :: e
+  character(*), intent(in) :: e
   real(dbl), dimension(:,:), intent(in) :: atoms
   real(dbl), dimension(:,:), intent(out) :: h_pos
   character(*), parameter :: my_name = "saturate_atom"
@@ -341,7 +340,13 @@ subroutine saturate_atom(e,atoms,h_pos)
   case (1)
     call error(my_name,"bonds_max == 1 not implemented yet")
   case (2)
-    call error(my_name,"bonds_max == 2 not implemented yet")
+    select case (e)
+    case ("O")
+      call saturate_2_angular(dist,atoms,h_pos)
+    case default
+      call error(my_name,&
+        "bonds_max == 2 not implemented yet for element "//trim(e))
+    end select
   case (3)
     call error(my_name,"bonds_max == 3 not implemented yet")
   case (4)
@@ -376,48 +381,70 @@ end subroutine rotate_hydrogens
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine saturate_1()
-
-  character(*), parameter :: my_name = "saturate_1"
-  call error(my_name,"not implemented yet")
-
-end subroutine saturate_1
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine saturate_2_linear()
-
-  character(*), parameter :: my_name = "saturate_2_linear"
-  call error(my_name,"not implemented yet")
-
-end subroutine saturate_2_linear
+!subroutine saturate_1()
+!
+!  character(*), parameter :: my_name = "saturate_1"
+!  call error(my_name,"not implemented yet")
+!
+!end subroutine saturate_1
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine saturate_2_angular()
+!subroutine saturate_2_linear()
+!
+!  character(*), parameter :: my_name = "saturate_2_linear"
+!  call error(my_name,"not implemented yet")
+!
+!end subroutine saturate_2_linear
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine saturate_2_angular(d,atoms,h_pos)
+
+  real(dbl), intent(in) :: d
+  real(dbl), dimension(:,:), intent(in) :: atoms
+  real(dbl), dimension(:,:), intent(out) :: h_pos
   character(*), parameter :: my_name = "saturate_2_angular"
-  call error(my_name,"not implemented yet")
+  real(dbl), dimension(3) :: p
+  integer :: an
+  real(dbl) :: alpha_c
+
+  h_pos      = 0.0_dbl
+  h_pos(1,1) = d
+
+  an = size(atoms,2)
+  select case (an)
+  case (1)
+    alpha_c = 1.9106332356470423_dbl
+    call rotate3d(h_pos(:,1),p,2,alpha_c)
+    h_pos(:,2) = p
+  case (2)
+    alpha_c = 1.9106332356470423_dbl
+    call rotate3d(h_pos(:,1),p,2,alpha_c)
+    h_pos(:,1) = p
+  case default
+    call error(my_name,"wrong size of atoms argument")
+  end select
 
 end subroutine saturate_2_angular
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine saturate_3_trigonal_planar()
-
-  character(*), parameter :: my_name = "saturate_3_trigonal_planar"
-  call error(my_name,"not implemented yet")
-
-end subroutine saturate_3_trigonal_planar
+!subroutine saturate_3_trigonal_planar()
+!
+!  character(*), parameter :: my_name = "saturate_3_trigonal_planar"
+!  call error(my_name,"not implemented yet")
+!
+!end subroutine saturate_3_trigonal_planar
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine saturate_3_trigonal_pyramidal()
-
-  character(*), parameter :: my_name = "saturate_3_trigonal_pyramidal"
-  call error(my_name,"not implemented yet")
-
-end subroutine saturate_3_trigonal_pyramidal
+!subroutine saturate_3_trigonal_pyramidal()
+!
+!  character(*), parameter :: my_name = "saturate_3_trigonal_pyramidal"
+!  call error(my_name,"not implemented yet")
+!
+!end subroutine saturate_3_trigonal_pyramidal
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -429,7 +456,6 @@ subroutine saturate_4_tetrahedral(d,atoms,h_pos)
   character(*), parameter :: my_name = "saturate_4_tetrahedral"
   real(dbl), dimension(3) :: p
   integer :: an
-  integer :: hn
   real(dbl) :: dp
   real(dbl) :: alpha
   real(dbl) :: beta
