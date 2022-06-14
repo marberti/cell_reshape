@@ -7,6 +7,7 @@ module mod_cell_saturate
   use mod_logical
   use mod_connectivity
   use mod_rotation
+  use mod_cell_check_distances
 
   implicit none
   save
@@ -141,9 +142,9 @@ subroutine cell_saturate(cin,cout)
 
   ! build cout
   ! Output is not a periodic cell, cell constants are meaningless
-  cout%a = 0.0
-  cout%b = 0.0
-  cout%c = 0.0
+  cout%a = cin%a
+  cout%b = cin%b
+  cout%c = cin%c
   n_out  = n + sum(saturation_hydrogens)
   cout%xyz%n = n_out
 
@@ -169,6 +170,9 @@ subroutine cell_saturate(cin,cout)
     cout%xyz%y(i) = all_h_pos(2,i-n)
     cout%xyz%z(i) = all_h_pos(3,i-n)
   end do
+
+  ! check for atoms too close
+  call cell_check_distances(cout)
 
   ! deallocation section
   deallocate(dm,stat=err_n,errmsg=err_msg)
