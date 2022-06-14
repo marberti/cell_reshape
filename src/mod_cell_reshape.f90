@@ -91,7 +91,7 @@ subroutine cell_reshape(cin,cout,center)
     if ((count_true(lm_new(i,:)) == 0).and. &
         (count_true(lm_old(i,:)) /= 0)) then
       write(i_str,'(I5)') i
-      write(*,*) "Atom "//i_str//" was isolated after reshaping: "//&
+      write(*,*) "Atom "//i_str//" became isolated after reshaping: "//&
         "restored to its original position"
       cout%xyz%x(i) = cout%xyz%x(i) - moved_x(i)
       cout%xyz%y(i) = cout%xyz%y(i) - moved_y(i)
