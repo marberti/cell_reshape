@@ -13,6 +13,8 @@ module mod_cell_reshape
 
 contains
 
+! Public !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 subroutine cell_reshape(cin,cout,center)
 
   type(cell_t), intent(in)  :: cin
@@ -43,22 +45,25 @@ subroutine cell_reshape(cin,cout,center)
   cout%xyz%y = cin%xyz%y
   cout%xyz%z = cin%xyz%z
 
-  call reshape_array(cout%xyz%x,n,cout%a,center%x)
-  call reshape_array(cout%xyz%y,n,cout%b,center%y)
-  call reshape_array(cout%xyz%z,n,cout%c,center%z)
+  call reshape_array(cout%xyz%x,cout%a,center%x)
+  call reshape_array(cout%xyz%y,cout%b,center%y)
+  call reshape_array(cout%xyz%z,cout%c,center%z)
 
 end subroutine cell_reshape
 
-subroutine reshape_array(a,n,d,c)
+! Private !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine reshape_array(a,d,c)
 
   real(dbl), dimension(:), intent(inout) :: a
-  integer, intent(in) :: n
   real(dbl), intent(in) :: d
   real(dbl), intent(in) :: c
-  integer :: i
   real(dbl) :: t ! threshold
+  integer :: n
+  integer :: i
 
   t = d / 2.0_dbl
+  n = size(a)
 
   do i=1, n
     if (abs(c-a(i)) > t) then
@@ -71,5 +76,7 @@ subroutine reshape_array(a,n,d,c)
   end do
 
 end subroutine reshape_array
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end module mod_cell_reshape
