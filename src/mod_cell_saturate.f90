@@ -493,6 +493,7 @@ subroutine saturate_4_tetrahedral(d,atoms,h_pos)
   character(*), parameter :: my_name = "saturate_4_tetrahedral"
   real(dbl), dimension(3) :: p
   integer :: an
+  integer :: stat
   real(dbl) :: dp
   real(dbl) :: alpha
   real(dbl) :: beta
@@ -534,15 +535,25 @@ subroutine saturate_4_tetrahedral(d,atoms,h_pos)
     h_pos(2,2) = -h_pos(2,1)
     h_pos(3,2) =  h_pos(3,1)
   case (4)
-    ! FIXME Logic of case (4) can be improved
-    alpha = get_angle(atoms(2,4),sqrt(atoms(1,4)**2 + atoms(3,4)**2))
-    alpha_c = (pi - alpha) / 2.0_dbl
-    h_pos(2,1) = d*sin(-alpha_c)
-    dp = d*cos(-alpha_c)
-    beta = get_angle(atoms(3,3),atoms(1,3))
-    beta_c = pi - beta/2.0_dbl
-    h_pos(3,1) = dp*sin(-beta_c)
-    h_pos(1,1) = dp*cos(-beta_c)
+    call solve_lse3(                    &
+      d,                                &
+      atoms(1,2),atoms(2,2),atoms(3,2), &
+      atoms(1,3),atoms(2,3),atoms(3,3), &
+      atoms(1,4),atoms(2,4),atoms(3,4), &
+      h_pos(1,1),h_pos(2,1),h_pos(3,1), &
+      stat                              &
+    )
+    if (stat /= 0) then
+      ! not a very accurate solution, used only when the main solver fails
+      alpha = get_angle(atoms(2,4),sqrt(atoms(1,4)**2 + atoms(3,4)**2))
+      alpha_c = (pi - alpha) / 2.0_dbl
+      h_pos(2,1) = d*sin(-alpha_c)
+      dp = d*cos(-alpha_c)
+      beta = get_angle(atoms(3,3),atoms(1,3))
+      beta_c = pi - beta/2.0_dbl
+      h_pos(3,1) = dp*sin(-beta_c)
+      h_pos(1,1) = dp*cos(-beta_c)
+    end if
   case default
     call error(my_name,"wrong size of atoms argument")
   end select
@@ -551,7 +562,7 @@ end subroutine saturate_4_tetrahedral
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine solve_lse3(d,x2,y2,z2,x3,y3,z3,x4,y4,z4,x,y,z)
+subroutine solve_lse3(d,x2,y2,z2,x3,y3,z3,x4,y4,z4,x,y,z,stat)
 
   real(dbl), intent(in) :: d
   real(dbl), intent(in) :: x2
@@ -566,28 +577,36 @@ subroutine solve_lse3(d,x2,y2,z2,x3,y3,z3,x4,y4,z4,x,y,z)
   real(dbl), intent(out) :: x
   real(dbl), intent(out) :: y
   real(dbl), intent(out) :: z
-  real(dbl) :: m2
-  real(dbl) :: m3
-  real(dbl) :: m4
-  real(dbl) :: cf1
-  real(dbl) :: cf2
+  integer,   intent(out) :: stat
+  real(dbl), dimension(3,3) :: a_matrix
+  real(dbl), dimension(3,1) :: b_matrix
   real(dbl) :: a
   real(dbl) :: b
   real(dbl) :: c
   real(dbl) :: dpos
   real(dbl) :: dneg
+  integer, dimension(3) :: piv
 
-  m2 = sqrt(x2**2 + y2**2 + z2**2)
-  m3 = sqrt(x3**2 + y3**2 + z3**2)
-  m4 = sqrt(x4**2 + y4**2 + z4**2)
+  a_matrix(1,1) = y2
+  a_matrix(2,1) = y3
+  a_matrix(3,1) = y4
+  a_matrix(1,2) = z2
+  a_matrix(2,2) = z3
+  a_matrix(3,2) = z4
+  a_matrix(1,3) = -d*sqrt(x2**2 + y2**2 + z2**2)
+  a_matrix(2,3) = -d*sqrt(x3**2 + y3**2 + z3**2)
+  a_matrix(3,3) = -d*sqrt(x4**2 + y4**2 + z4**2)
 
-  cf1 = (y2*d*m3 - y3*d*m2) / (z3*y2 - z2*y3)
-  cf2 = (x2*y3 - x3*y2) / (z3*y2 - z2*y3)
+  b_matrix(1,1) = -x2
+  b_matrix(2,1) = -x3
+  b_matrix(3,1) = -x4
 
-  c = (cf2*(y4*z2/y2 - z4) + y4*x2/y2 - x4) / &
-      (cf1*(z4 - y4*z2/y2) + d*m2*y4/y2 - d*m4)
-  b = cf1*c + cf2
-  a = (d*m2*c - z2*b - x2) / y2
+  call dgesv(3,1,a_matrix,3,piv,b_matrix,3,stat)
+  if (stat /= 0) return
+
+  a = b_matrix(1,1)
+  b = b_matrix(2,1)
+  c = b_matrix(3,1)
 
   x = sqrt((d**2) / (1 + a**2 + b**2))
   y = a*x
@@ -600,6 +619,33 @@ subroutine solve_lse3(d,x2,y2,z2,x3,y3,z3,x4,y4,z4,x,y,z)
     y = -y
     z = -z
   end if
+
+!  ! old implementation that solves the general case,
+!  ! but fails in particular cases
+!  ! when one or more among y2, z2, y3, z3, y4, z4 is zero
+!  m2 = sqrt(x2**2 + y2**2 + z2**2)
+!  m3 = sqrt(x3**2 + y3**2 + z3**2)
+!  m4 = sqrt(x4**2 + y4**2 + z4**2)
+!
+!  cf1 = (y2*d*m3 - y3*d*m2) / (z3*y2 - z2*y3)
+!  cf2 = (x2*y3 - x3*y2) / (z3*y2 - z2*y3)
+!
+!  c = (cf2*(y4*z2/y2 - z4) + y4*x2/y2 - x4) / &
+!      (cf1*(z4 - y4*z2/y2) + d*m2*y4/y2 - d*m4)
+!  b = cf1*c + cf2
+!  a = (d*m2*c - z2*b - x2) / y2
+!
+!  x = sqrt((d**2) / (1 + a**2 + b**2))
+!  y = a*x
+!  z = b*x
+!  dpos = sqrt((x-x2)**2 + (y-y2)**2 + (z-z2)**2)
+!  dneg = sqrt((-x-x2)**2 + (-y-y2)**2 + (-z-z2)**2)
+!
+!  if (dpos < dneg) then
+!    x = -x
+!    y = -y
+!    z = -z
+!  end if
 
 end subroutine solve_lse3
 

@@ -1,5 +1,6 @@
 FC       = gfortran
 FLAGS    = -g -cpp -O2 -Wall -Wunused -Wpedantic -Wno-maybe-uninitialized -std=f2008
+LIBS     = -L/usr/lib/x86_64-linux-gnu -lblas -llapack
 
 SRCDIR = src
 OBJDIR = obj
@@ -47,7 +48,7 @@ clean:
 
 # core ----------------------------------------------------
 $(EXE): $(OBJ)
-	$(FC) $(FLAGS) -J$(MODDIR) -o $(EXE) $(OBJ)
+	$(FC) $(FLAGS) -J$(MODDIR) -o $(EXE) $(OBJ) $(LIBS)
 
 $(OBJ): | $(OBJDIR)
 $(OBJ): | $(MODDIR)
