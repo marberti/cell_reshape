@@ -551,4 +551,58 @@ end subroutine saturate_4_tetrahedral
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+subroutine solve_lse3(d,x2,y2,z2,x3,y3,z3,x4,y4,z4,x,y,z)
+
+  real(dbl), intent(in) :: d
+  real(dbl), intent(in) :: x2
+  real(dbl), intent(in) :: y2
+  real(dbl), intent(in) :: z2
+  real(dbl), intent(in) :: x3
+  real(dbl), intent(in) :: y3
+  real(dbl), intent(in) :: z3
+  real(dbl), intent(in) :: x4
+  real(dbl), intent(in) :: y4
+  real(dbl), intent(in) :: z4
+  real(dbl), intent(out) :: x
+  real(dbl), intent(out) :: y
+  real(dbl), intent(out) :: z
+  real(dbl) :: m2
+  real(dbl) :: m3
+  real(dbl) :: m4
+  real(dbl) :: cf1
+  real(dbl) :: cf2
+  real(dbl) :: a
+  real(dbl) :: b
+  real(dbl) :: c
+  real(dbl) :: dpos
+  real(dbl) :: dneg
+
+  m2 = sqrt(x2**2 + y2**2 + z2**2)
+  m3 = sqrt(x3**2 + y3**2 + z3**2)
+  m4 = sqrt(x4**2 + y4**2 + z4**2)
+
+  cf1 = (y2*d*m3 - y3*d*m2) / (z3*y2 - z2*y3)
+  cf2 = (x2*y3 - x3*y2) / (z3*y2 - z2*y3)
+
+  c = (cf2*(y4*z2/y2 - z4) + y4*x2/y2 - x4) / &
+      (cf1*(z4 - y4*z2/y2) + d*m2*y4/y2 - d*m4)
+  b = cf1*c + cf2
+  a = (d*m2*c - z2*b - x2) / y2
+
+  x = sqrt((d**2) / (1 + a**2 + b**2))
+  y = a*x
+  z = b*x
+  dpos = sqrt((x-x2)**2 + (y-y2)**2 + (z-z2)**2)
+  dneg = sqrt((-x-x2)**2 + (-y-y2)**2 + (-z-z2)**2)
+
+  if (dpos < dneg) then
+    x = -x
+    y = -y
+    z = -z
+  end if
+
+end subroutine solve_lse3
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 end module mod_cell_saturate
