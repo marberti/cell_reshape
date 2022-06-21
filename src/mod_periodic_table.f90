@@ -103,7 +103,7 @@ module mod_periodic_table
     element_t(e="Re",ef="Re",z= 75,m=186.2100_dbl,r_mean=0.000_dbl,r_max=0.000_dbl),&
     element_t(e="Os",ef="Os",z= 76,m=190.2300_dbl,r_mean=0.000_dbl,r_max=0.000_dbl),&
     element_t(e="Ir",ef="Ir",z= 77,m=192.2200_dbl,r_mean=0.000_dbl,r_max=0.000_dbl),&
-    element_t(e="Pt",ef="Pt",z= 78,m=195.0800_dbl,r_mean=0.000_dbl,r_max=0.000_dbl),&
+    element_t(e="Pt",ef="Pt",z= 78,m=195.0800_dbl,r_mean=1.230_dbl,r_max=1.700_dbl),&
     element_t(e="Au",ef="Au",z= 79,m=196.9700_dbl,r_mean=0.000_dbl,r_max=0.000_dbl),&
     element_t(e="Hg",ef="Hg",z= 80,m=200.5900_dbl,r_mean=0.000_dbl,r_max=0.000_dbl),&
     element_t(e="Tl",ef="Tl",z= 81,m=204.3800_dbl,r_mean=0.000_dbl,r_max=0.000_dbl),&
@@ -159,13 +159,7 @@ real(dbl) function pt_get_r_mean(e)
 
   ! TODO remove when r_mean and r_max will be implemented for all elements
   select case (e)
-  case ("H")
-    continue
-  case ("O")
-    continue
-  case ("Al")
-    continue
-  case ("Si")
+  case ("H","O","Al","Si","Pt")
     continue
   case default
     call error(my_name,"r_mean for element "//trim(e)//" not implemented yet")
@@ -197,13 +191,7 @@ real(dbl) function pt_get_r_max(e)
 
   ! TODO remove when r_mean and r_max will be implemented for all elements
   select case (e)
-  case ("H")
-    continue
-  case ("O")
-    continue
-  case ("Al")
-    continue
-  case ("Si")
+  case ("H","O","Al","Si","Pt")
     continue
   case default
     call error(my_name,"r_max for element "//trim(e)//" not implemented yet")
