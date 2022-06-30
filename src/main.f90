@@ -54,8 +54,8 @@ program main
   end do
 
   call read_cell(trim(fname),cin,cell_center)
-  write(*,*) "Cell center:"
-  write(*,*) cell_center%x, cell_center%y, cell_center%z
+  write(*,'(A,3(F9.4))') " Cell center:", cell_center%x, &
+    cell_center%y, cell_center%z
   if (flag_cell_reshape) then
     call cell_reshape(cin,cresh,cell_center)
     write(*,*) "Reshaped."

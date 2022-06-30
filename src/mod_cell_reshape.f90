@@ -91,11 +91,13 @@ subroutine cell_reshape(cin,cout,center)
     if ((count_true(lm_new(i,:)) == 0).and. &
         (count_true(lm_old(i,:)) /= 0)) then
       write(i_str,'(I5)') i
-      write(*,*) "Atom "//i_str//" became isolated after reshaping: "//&
-        "restored to its original position"
-      cout%xyz%x(i) = cout%xyz%x(i) - moved_x(i)
-      cout%xyz%y(i) = cout%xyz%y(i) - moved_y(i)
-      cout%xyz%z(i) = cout%xyz%z(i) - moved_z(i)
+!      write(*,*) "Atom "//i_str//" became isolated after reshaping: "//&
+!        "restored to its original position"
+!      cout%xyz%x(i) = cout%xyz%x(i) - moved_x(i)
+!      cout%xyz%y(i) = cout%xyz%y(i) - moved_y(i)
+!      cout%xyz%z(i) = cout%xyz%z(i) - moved_z(i)
+      write(*,'(A,3(F9.4))') " Atom "//i_str//" isolated, moved of: ",&
+        moved_x(i), moved_y(i), moved_z(i)
     end if
   end do
 
