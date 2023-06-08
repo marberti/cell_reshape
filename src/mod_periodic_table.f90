@@ -230,6 +230,8 @@ integer function pt_get_max_bonds(e)
     pt_get_max_bonds = 3
   case ("Si")
     pt_get_max_bonds = 4
+  case ("Pt")
+    pt_get_max_bonds = 0
   case default
     call error(my_name,"not implemented for element "//trim(e))
   end select
